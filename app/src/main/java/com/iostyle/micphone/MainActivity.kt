@@ -16,25 +16,34 @@ class MainActivity : AppCompatActivity(), SoundMeterListener {
 
     private var audioView: AudioVisualizerView? = null
     private var threshold = 500
+    private var start = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        window.addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+
         audioView = findViewById(R.id.audioView)
 
-        findViewById<Button>(R.id.start)?.setOnClickListener {
-            XXPermissions.getDenied(this, listOf("android.permission.RECORD_AUDIO")).let {
-                if (it.isEmpty()) {
-                    startRecord()
+        findViewById<Button>(R.id.startStopButton)?.let { button ->
+            button.setOnClickListener {
+                if (!start) {
+                    XXPermissions.getDenied(this, listOf("android.permission.RECORD_AUDIO")).let {
+                        if (it.isEmpty()) {
+                            startRecord()
+                            start = true
+                            button.text = "停止"
+                        } else {
+                            XXPermissions.startPermissionActivity(this, it)
+                        }
+                    }
                 } else {
-                    XXPermissions.startPermissionActivity(this, it)
+                    soundMeter?.stop()
+                    start = false
+                    button.text = "启动"
                 }
             }
-        }
-
-        findViewById<Button>(R.id.stop)?.setOnClickListener {
-            soundMeter?.stop()
         }
 
         val thresholdTv = findViewById<TextView>(R.id.thresholdTv).also {
